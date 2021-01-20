@@ -28,19 +28,9 @@ public class MainView extends JDialog {
         list1.setListData(arr);
         list2.setListData(arr2);
 
-
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(btnStart);
-
-
-
-
-
-
-
-
-
 
         btnStart.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -56,24 +46,19 @@ public class MainView extends JDialog {
             }
         });
 
-        /**
-        // call onCancel() on ESCAPE
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-         **/
+        initView();
+
     }
 
     private void onOK() {
         // add your code here
+        System.out.println("OnOK");
     }
 
-    public static void main(String[] args) {
-        MainView dialog = new MainView();
-        dialog.pack();
-        dialog.setVisible(true);
+    private void initView(){
+        this.pack();
+        this.setVisible(true);
+        this.setResizable(false);
         System.exit(0);
     }
 
