@@ -32,7 +32,12 @@ public class PostVO {
         this.ATTACHMENT_SOURCE_URL = url;
     }
 
+    public String getCATEGORIES_NAME(){
+        return CATEGORIES_NAME;
+    }
+
     public void log(){
+        System.out.println("========================================");
         System.out.println("MEDIA_ID : " + MEDIA_ID);
         System.out.println("POST_ID : " + POST_ID);
         System.out.println("CATEGORIES_ID : " + CATEGORIES_ID);
