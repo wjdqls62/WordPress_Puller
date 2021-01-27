@@ -1,5 +1,6 @@
 package com.jiran.qa.Common;
 
+import com.jiran.qa.Main;
 import com.jiran.qa.View.MainView;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +22,7 @@ public class PostManager extends Thread {
     private HashMap<String, CategoriesVO> categoriesVOHashMap;
     private boolean isEmpty = false;
     private ILogCallback logger = MainView.getLogger();
+    private IPostManagerCallback postManagerCallback = MainView.getPostManagerCallback();
 
     public PostManager(){
         if(Config.isDebug)  logger.log("PostManager init");
@@ -27,6 +30,7 @@ public class PostManager extends Thread {
 
     @Override
     public void run() {
+        postManagerCallback.startParse();
         if(Config.isDebug)  logger.log("PostManager Thread is start..");
 
         mediaJsonArray =  get(Config.REQUEST_MEDIA_URL);
@@ -45,9 +49,13 @@ public class PostManager extends Thread {
         if(Config.isDebug){
             logger.log("Finish. Received " + postList.size() + " posts.");
         }
+
+        postManagerCallback.finishParse();
     }
 
-
+    public boolean isEmpty(){
+        return isEmpty;
+    }
 
     public JSONArray getCategoriesArray(){
         return categoriesArray;
@@ -60,6 +68,7 @@ public class PostManager extends Thread {
     public JSONArray get(String requestURL){
         HttpURLConnection conn = null;
         JSONArray respJsonArray = null;
+        int responseCode = 0;
 
         try{
             URL url = new URL(requestURL);
@@ -71,7 +80,7 @@ public class PostManager extends Thread {
 
             JSONObject commands = new JSONObject();
 
-            int responseCode = conn.getResponseCode();
+            responseCode = conn.getResponseCode();
             if(responseCode == 400 || responseCode == 401 || responseCode == 500){
                 logger.log("Error Code : " + responseCode);
             }else{
@@ -87,8 +96,14 @@ public class PostManager extends Thread {
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
+        } catch (SocketTimeoutException e){
+            e.printStackTrace();
+            logger.log("Fail. Connection Timeout.");
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        finally {
+            postManagerCallback.finishParse();
         }
         return respJsonArray;
     }
