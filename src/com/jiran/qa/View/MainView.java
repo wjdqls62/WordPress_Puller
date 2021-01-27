@@ -1,6 +1,7 @@
 package com.jiran.qa.View;
 
 import com.jiran.qa.Common.*;
+import com.sun.tools.javac.Main;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -47,6 +48,28 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
     }
 
     public MainView() {
+        init();
+    }
+
+    // Stop 버튼 동작
+    private void onNegativeButton(){
+        if(Config.isDebug)  log("onNegativeButton");
+        if(isReady){
+            isReady = false;
+            btnStart.setText("Search");
+            postList.clear();
+            list1.setListData(new String[0]);
+            list2.setListData(new String[0]);
+        }
+    }
+
+    // Search, Pull 버튼 동작
+    private void onOK() throws InterruptedException {
+        postManager = new PostManager();
+        postManager.start();
+    }
+
+    private void init(){
         logCallback = this;
         postManagerCallback = this;
         setContentPane(contentPane);
@@ -77,37 +100,14 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
                 dispose();
             }
         });
+        btnSelector.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        init();
-
-    }
-
-    // Stop 버튼 동작
-    private void onNegativeButton(){
-        if(Config.isDebug)  log("onNegativeButton");
-        if(isReady){
-            isReady = false;
-            btnStart.setText("Search");
-            postList.clear();
-            list1.setListData(new String[0]);
-            list2.setListData(new String[0]);
-        }
-    }
-
-    // Search, Pull 버튼 동작
-    private void onOK() throws InterruptedException {
-        postManager = new PostManager();
-        postManager.start();
-    }
-
-    private void init(){
+            }
+        });
 
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-        this.pack();
-        this.setVisible(true);
-        this.setResizable(false);
-        System.exit(0);
     }
 
     private void createUIComponents() {
@@ -153,5 +153,15 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
         }
         if(isReady) btnStart.setText("Pull");
         btnStart.setEnabled(true);
+    }
+
+    public static void main(String args[]){
+        MainView view = new MainView();
+        view.pack();
+        view.setVisible(true);
+        view.setSize(Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
+        view.setResizable(false);
+        view.setTitle("TEST");
+        System.exit(0);
     }
 }

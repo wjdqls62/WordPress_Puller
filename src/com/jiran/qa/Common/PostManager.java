@@ -1,6 +1,5 @@
 package com.jiran.qa.Common;
 
-import com.jiran.qa.Main;
 import com.jiran.qa.View.MainView;
 import org.json.JSONArray;
 import org.json.JSONObject;
