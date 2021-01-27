@@ -1,5 +1,6 @@
 package com.jiran.qa.Common;
 
+import com.jiran.qa.View.MainView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -18,9 +19,16 @@ public class PostManager extends Thread {
     private ArrayList<PostVO> postList;
     private HashMap<String, CategoriesVO> categoriesVOHashMap;
     private boolean isEmpty = false;
+    private ILogCallback logger = MainView.getLogger();
+
+    public PostManager(){
+        if(Config.isDebug)  logger.log("PostManager init");
+    }
 
     @Override
     public void run() {
+        if(Config.isDebug)  logger.log("PostManager Thread is start..");
+
         mediaJsonArray =  get(Config.REQUEST_MEDIA_URL);
         postJsonArray = get(Config.REQUEST_POST_URL);
         categoriesArray = get(Config.REQUEST_CATEGORIES_URL);
@@ -33,7 +41,13 @@ public class PostManager extends Thread {
             isEmpty = true;
             if(Config.isDebug)  System.out.println("PostList is Empty.");
         }
+
+        if(Config.isDebug){
+            logger.log("Finish. Received " + postList.size() + " posts.");
+        }
     }
+
+
 
     public JSONArray getCategoriesArray(){
         return categoriesArray;
@@ -59,7 +73,7 @@ public class PostManager extends Thread {
 
             int responseCode = conn.getResponseCode();
             if(responseCode == 400 || responseCode == 401 || responseCode == 500){
-                System.out.println(responseCode + "Error");
+                logger.log("Error Code : " + responseCode);
             }else{
                 BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 StringBuilder stringBuilder = new StringBuilder();

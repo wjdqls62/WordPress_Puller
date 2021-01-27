@@ -81,9 +81,11 @@
         <properties/>
         <border type="none"/>
         <children>
-          <component id="b7764" class="javax.swing.JTextArea" binding="textArea1" default-binding="true">
+          <component id="b7764" class="javax.swing.JTextArea" binding="logTxt">
             <constraints/>
-            <properties/>
+            <properties>
+              <text value=""/>
+            </properties>
           </component>
         </children>
       </scrollpane>
