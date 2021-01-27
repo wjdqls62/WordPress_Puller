@@ -96,14 +96,14 @@ public class PostManager extends Thread {
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
+            postManagerCallback.finishParse();
         } catch (SocketTimeoutException e){
             e.printStackTrace();
+            postManagerCallback.finishParse();
             logger.log("Fail. Connection Timeout.");
         } catch (IOException e) {
-            e.printStackTrace();
-        }
-        finally {
             postManagerCallback.finishParse();
+            e.printStackTrace();
         }
         return respJsonArray;
     }
