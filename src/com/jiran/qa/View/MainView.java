@@ -18,15 +18,16 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
     private JPanel contentPane;
     private JButton btnStart;
     private JProgressBar progressBar1;
-    private JTextField textField2;
     private JButton btnSelector;
     private JButton btnStop;
     private JTextArea logTxt;
+    private JTextField savePath;
     private JPanel JList_Panel;
     private JScrollPane include_list;
     private JScrollPane exclude_list;
     private JList list1;
     private JList list2;
+    private String path;
 
     private ArrayList<PostVO> postList;
     private PostManager postManager;
@@ -76,6 +77,7 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
         setModal(true);
         getRootPane().setDefaultButton(btnStart);
 
+        // Positive 버튼 초기화
         btnStart.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -86,6 +88,7 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
             }
         });
 
+        // Negative 버튼 초기화
         btnStop.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -100,14 +103,25 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
                 dispose();
             }
         });
+
+        // 경로선택기 초기화
+        path = System.getProperty("user.dir");
+        savePath.setText(path);
         btnSelector.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                JFileChooser selector = new JFileChooser();
+                selector.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                selector.showOpenDialog(null);
 
+                savePath.setText(selector.getSelectedFile().toString());
+                log("Selector Path : " + selector.getSelectedFile());
             }
         });
 
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+
     }
 
     private void createUIComponents() {
