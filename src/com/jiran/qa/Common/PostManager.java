@@ -9,23 +9,38 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 
-public class PostManager {
+public class PostManager extends Thread {
     private JSONArray mediaJsonArray;
     private JSONArray postJsonArray;
     private JSONArray categoriesArray;
     private ArrayList<PostVO> postList;
+    private HashMap<String, CategoriesVO> categoriesVOHashMap;
+    private boolean isEmpty = false;
 
-    public PostManager(){
+    @Override
+    public void run() {
         mediaJsonArray =  get(Config.REQUEST_MEDIA_URL);
         postJsonArray = get(Config.REQUEST_POST_URL);
         categoriesArray = get(Config.REQUEST_CATEGORIES_URL);
 
+        categoriesVOHashMap = new HashMap<>();
+        setCategoriesArray();
         postList = parseJsonArray();
+
+        if(postList.isEmpty()){
+            isEmpty = true;
+            if(Config.isDebug)  System.out.println("PostList is Empty.");
+        }
     }
 
-    public JSONArray getCategories(){
+    public JSONArray getCategoriesArray(){
         return categoriesArray;
+    }
+
+    public ArrayList<PostVO> getPosts(){
+        return postList;
     }
 
     public JSONArray get(String requestURL){
@@ -64,9 +79,20 @@ public class PostManager {
         return respJsonArray;
     }
 
-    public ArrayList<PostVO> parseJsonArray(){
+    private void setCategoriesArray(){
 
-        ArrayList<PostVO> tempPost = new ArrayList<PostVO>();
+        for(int i = 0; i < categoriesArray.length(); i++){
+            JSONObject temp = categoriesArray.getJSONObject(i);
+            CategoriesVO categoriesVO = new CategoriesVO();
+
+            categoriesVO.setCategories(temp);
+            categoriesVOHashMap.put(temp.get("id").toString(), categoriesVO);
+        }
+    }
+
+    private ArrayList<PostVO> parseJsonArray(){
+
+        ArrayList<PostVO> tempPost = new ArrayList<>();
 
         for(int i = 0; i < mediaJsonArray.length(); i++){
             PostVO postVO = new PostVO();
@@ -80,16 +106,16 @@ public class PostManager {
             media_id = mediaJsonArray.getJSONObject(i).get("id").toString();
             postVO.setMEDIA_ID(media_id);
 
-
             // set post id
             post_id = mediaJsonArray.getJSONObject(i).get("post").toString();
             postVO.setPOST_ID(post_id);
             for(int j=0; j<postJsonArray.length(); j++){
                 if(postJsonArray.getJSONObject(j).get("id").toString().equals(post_id)){
+                    String temp = postJsonArray.getJSONObject(j).get("categories").toString().replaceAll("[^0-9]", "");
+                    postVO.setCATEGORIES_ID(temp);
                     postVO.setPOST_URL(postJsonArray.getJSONObject(j).get("link").toString());
-                    postVO.setCATEGORIES_ID(postJsonArray.getJSONObject(j).get("categories").toString());
+                    postVO.setCATEGORIES_NAME(categoriesVOHashMap.get(temp).getCategories_name());
                 }
-                break;
             }
             postVO.log();
             tempPost.add(postVO);
