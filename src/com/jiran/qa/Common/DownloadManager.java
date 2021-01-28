@@ -20,7 +20,9 @@ public class DownloadManager extends Thread {
     private String path;
 
     public DownloadManager(ArrayList<PostVO> postLost, String path, HashSet<String> includeCategories){
-        logger.log("DownloadManager init.");
+        if(Config.isDebug){
+            logger.log("DownloadManager init.");
+        }
         this.postList = postLost;
         this.path = path;
         this.includeCategories = includeCategories;
@@ -44,15 +46,17 @@ public class DownloadManager extends Thread {
                     URLConnection urlConnection = url.openConnection();
                     totalFileSize += urlConnection.getContentLength();
                 } catch (MalformedURLException e) {
+                    logger.log(e.toString());
                     e.printStackTrace();
                 } catch (IOException e) {
+                    logger.log(e.toString());
                     e.printStackTrace();
                 }
             }else{
                 postList.get(i).setInclude(false);
             }
         }
-        logger.log("Total Size : " + totalFileSize);
+        logger.log("Total Size : " + totalFileSize / 1024 + " KBytes");
     }
 
     /**
@@ -93,9 +97,12 @@ public class DownloadManager extends Thread {
                     }
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
+                    logger.log(e.toString());
                 } catch (MalformedURLException e) {
+                    logger.log(e.toString());
                     e.printStackTrace();
                 } catch (IOException e) {
+                    logger.log(e.toString());
                     e.printStackTrace();
                 } finally {
                     try {
@@ -107,6 +114,7 @@ public class DownloadManager extends Thread {
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
+                        logger.log(e.toString());
                     }
                 }
                 downloadManagerCallback.finishDownload(targetFilename);

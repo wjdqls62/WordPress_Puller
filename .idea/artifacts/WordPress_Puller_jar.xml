@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="WordPress_Puller:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/WordPress_Puller_jar</output-path>
+    <root id="archive" name="WordPress_Puller.jar">
+      <element id="module-output" name="WordPress_Puller" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/json-20201115.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

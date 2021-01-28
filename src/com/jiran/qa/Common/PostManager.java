@@ -26,13 +26,13 @@ public class PostManager extends Thread {
     private IPostManagerCallback postManagerCallback = MainView.getPostManagerCallback();
 
     public PostManager(){
-        if(Config.isDebug)  logger.log("PostManager init");
+        if(Config.isDebug)  logger.log("PostManager init.");
     }
 
     @Override
     public void run() {
         postManagerCallback.startParse();
-        if(Config.isDebug)  logger.log("PostManager Thread is start..");
+        logger.log("PostManager started searching the attachments.");
 
         mediaJsonArray =  get(Config.REQUEST_MEDIA_URL);
         postJsonArray = get(Config.REQUEST_POST_URL);
@@ -47,9 +47,8 @@ public class PostManager extends Thread {
             if(Config.isDebug)  System.out.println("PostList is Empty.");
         }
 
-        if(Config.isDebug){
-            logger.log("Finish. Received " + postList.size() + " posts.");
-        }
+        logger.log("Finish. Found " + postList.size() + " attachments.");
+
 
         postManagerCallback.finishParse();
     }
@@ -87,7 +86,9 @@ public class PostManager extends Thread {
 
                 responseCode = conn.getResponseCode();
                 if(responseCode == 400 || responseCode == 401 || responseCode == 500){
-                    logger.log("Error Code : " + responseCode);
+                    if (Config.isDebug) {
+                        logger.log("Error Code : " + responseCode);
+                    }
                     is_400_Error = true;
                 }else{
                     BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -111,13 +112,17 @@ public class PostManager extends Thread {
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();
+                logger.log(e.toString());
                 postManagerCallback.finishParse();
             } catch (SocketTimeoutException e){
                 e.printStackTrace();
+                logger.log(e.toString());
                 postManagerCallback.finishParse();
+                logger.log(e.toString());
                 logger.log("Fail. Connection Timeout.");
             } catch (IOException e) {
                 postManagerCallback.finishParse();
+                logger.log(e.toString());
                 e.printStackTrace();
             }
         }

@@ -1,8 +1,8 @@
 package com.jiran.qa.View;
 
 import com.jiran.qa.Common.*;
-
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -57,7 +57,6 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
 
     // Stop 버튼 동작
     private void onNegativeButton(){
-        if(Config.isDebug)  log("onNegativeButton");
         if(isReady){
             isReady = false;
             btnStart.setText("Search");
@@ -87,20 +86,20 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
             progressBar1.setMinimum(0);
             downloadManager.start();
         }
-
     }
 
     private void init(){
-        logCallback = this;
-        postManagerCallback = this;
-        downloadManagerCallback = this;
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(btnStart);
 
+        logCallback = this;
+        postManagerCallback = this;
+        downloadManagerCallback = this;
 
-
-        // Positive 버튼 초기화
+        /**
+         * Search, Pull 버튼
+         */
         btnStart.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -111,6 +110,9 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
             }
         });
 
+        /**
+         * Stop버튼 정의 구문
+         */
         // Negative 버튼 초기화
         btnStop.addActionListener(new ActionListener() {
             @Override
@@ -127,7 +129,9 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
             }
         });
 
-        // 경로선택기 초기화
+        /**
+         * 경로선택기 정의구문
+         */
         path = System.getProperty("user.dir");
         savePath.setText(path);
         btnSelector.addActionListener(new ActionListener() {
@@ -142,11 +146,16 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
 
                 if(selector.getSelectedFile() != null){
                     savePath.setText(selector.getSelectedFile().toString());
-                    log("Selector Path : " + selector.getSelectedFile());
+                    if(Config.isDebug){
+                        log("Selector Path : " + selector.getSelectedFile());
+                    }
                 }
             }
         });
 
+        /**
+         * isDebug 체크박스 정의구문
+         */
         chkDebug.setSelected(Config.isDebug);
         chkDebug.addActionListener(new ActionListener() {
             @Override
@@ -160,6 +169,9 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
             }
         });
 
+        /**
+         * Clear버튼 정의구문
+         */
         btnClear.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -168,7 +180,7 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
         });
 
         /**
-         * JList 의 Item을 2번이상 연속클릭시 include <-> exclude 로 Item을 이동시킨다.
+         * JList 의 Item을 2번이상 연속클릭시 include <-> exclude 로 Item을 이동시키는 리스너
          */
         list1.addMouseListener(new MouseAdapter() {
             @Override
@@ -211,12 +223,13 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
 
     @Override
     public void startParse() {
+        isRunning = true;
         btnStart.setEnabled(false);
     }
 
     @Override
     public void finishParse() {
-        log("finishParse()");
+        isRunning = false;
         postList = postManager.getPosts();
 
 
@@ -249,17 +262,20 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
 
     public static void main(String args[]){
         MainView view = new MainView();
+        view.setPreferredSize(new Dimension(Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT));
+        view.setResizable(false);
+        view.setTitle(Config.WINDOW_TITLE);
+
         view.pack();
         view.setVisible(true);
-        view.setSize(Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
-        view.setResizable(false);
-        view.setTitle("TEST");
+
+
         System.exit(0);
     }
 
     @Override
     public void startDownload(String fileName, long fileSize) {
-        log("Download of [" + fileName + "] started. / " + fileSize / 1024 + " KBytes");
+        log("Download of [" + fileName + "] started. / " + fileSize / 1024 + "KBytes");
     }
 
     @Override
