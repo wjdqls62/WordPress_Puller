@@ -220,6 +220,7 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
     @Override
     public void startParse() {
         isRunning = true;
+        btnStop.setEnabled(false);
         btnStart.setEnabled(false);
     }
 
@@ -228,11 +229,9 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
         isRunning = false;
         postList = postManager.getPosts();
 
-
         /**
          *  최초 Categories 수신시 중복값 제거를 위해 HashSet 처리 후 toArray() 처리
          */
-
         if(postManager.getPosts() != null){
             includeCategories = new HashSet<>();
             excludeCategories = new HashSet<>();
@@ -241,7 +240,6 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
                 String  temp = postList.get(i).getCATEGORIES_NAME();
                 includeCategories.add(temp);
             }
-
 
             list1.setListData(includeCategories.toArray());
             //list2.setListData(excludeCategories);
@@ -254,6 +252,7 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
         }
         if(isReady) btnStart.setText("Pull");
         btnStart.setEnabled(true);
+        btnStop.setEnabled(true);
     }
 
     public static void main(String args[]){
