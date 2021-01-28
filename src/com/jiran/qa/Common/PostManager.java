@@ -76,7 +76,7 @@ public class PostManager extends Thread {
         while(!is_400_Error){
             try{
                 URL url = new URL(requestURL + pageCnt);
-                logger.log("RequestURL : " + requestURL + pageCnt);
+                //logger.log("RequestURL : " + requestURL + pageCnt);
 
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setConnectTimeout(10000);
@@ -87,7 +87,14 @@ public class PostManager extends Thread {
                 responseCode = conn.getResponseCode();
                 if(responseCode == 400 || responseCode == 401 || responseCode == 500){
                     if (Config.isDebug) {
-                        logger.log("Error Code : " + responseCode);
+                        /**
+                         * pageCnt 가 400에러가 return될때까지 반복문으로 동작하나 로그상 400에러로그가 표시됨으로
+                         * 프로그램의 오류로 오해 할 요지가 있으므로 pageCnt == 1 에서 400에러 return시에만 에러로그 표시
+                         */
+                        if(pageCnt == 1){
+                            logger.log("RequestURL : " + requestURL + pageCnt);
+                            logger.log("Error Code : " + responseCode);
+                        }
                     }
                     is_400_Error = true;
                 }else{
@@ -100,12 +107,14 @@ public class PostManager extends Thread {
                     }
                     respJsonArray = new JSONArray(stringBuilder.toString());
 
+                    /**
+                     * Categories Request시 다른 API와 다르게 "[]" 만 리턴되어 Error 코드로 분류되지 않음.
+                     * isEmpty()로 구분 가능함을 확인하여 break 해준다.
+                     */
                     if(respJsonArray.isEmpty()){
-                        if(Config.isDebug){
-                            logger.log("respJsonArray is null...");
-                        }
                         break;
                     }
+                    logger.log("RequestURL : " + requestURL + pageCnt);
                     tempList.add(respJsonArray);
                     pageCnt += 1;
                 }
