@@ -71,16 +71,17 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
      * @throws InterruptedException
      */
     private void onOK() throws InterruptedException {
-        DownloadManager downloadManager;
         if(!isReady){
             postManager = new PostManager();
             postManager.start();
-        }
-            downloadManager = new DownloadManager(postList, selector.getSelectedFile().getPath(), includeCategories);
+        }else{
+            DownloadManager downloadManager = new DownloadManager(postList, selector.getSelectedFile().getPath(), includeCategories);
             progressBar1.setMaximum(postList.size());
             progressBar1.setMinimum(0);
             downloadManager.start();
         }
+
+    }
 
 
     private void init(){
@@ -287,5 +288,11 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
     @Override
     public void updateProgressBar(int percent) {
         progressBar1.setValue(percent);
+    }
+
+    @Override
+    public void setButton(boolean status) {
+        btnStart.setEnabled(status);
+        btnStop.setEnabled(status);
     }
 }

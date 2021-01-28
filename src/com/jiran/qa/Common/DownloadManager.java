@@ -1,13 +1,11 @@
 package com.jiran.qa.Common;
 
 import com.jiran.qa.View.MainView;
-import com.sun.tools.javac.Main;
 
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.text.Format;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -35,10 +33,11 @@ public class DownloadManager extends Thread {
     /**
      * 다운로드 전 include에 포함된 카테고리인지 확인 후 FLAG변수를 정의한다.
      */
-    public void After(){
+    public void before(){
         double totalFileSize = 0;
         // rest progressbar
         downloadManagerCallback.resetProgressBar();
+        downloadManagerCallback.setButton(false);
 
         for(int i=0; i < postList.size(); i++){
             if(includeCategories.contains(postList.get(i).getCATEGORIES_NAME())){
@@ -68,7 +67,7 @@ public class DownloadManager extends Thread {
     public void run() {
         logger.log("DownloadManager thread is start.");
 
-        After();
+        before();
 
         for(int i = 0; i < postList.size(); i++){
             if(postList.get(i).isInclude()){
@@ -122,6 +121,11 @@ public class DownloadManager extends Thread {
                 downloadManagerCallback.finishDownload(targetFilename);
             }
         }
+        after();
+    }
+
+    public void after(){
+        downloadManagerCallback.setButton(true);
     }
 
     private String getFileName(String httpURL) throws NullPointerException{

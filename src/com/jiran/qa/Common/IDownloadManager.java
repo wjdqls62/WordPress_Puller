@@ -5,4 +5,5 @@ public interface IDownloadManager {
     void finishDownload(String fileName);
     void resetProgressBar();
     void updateProgressBar(int percent);
+    void setButton(boolean status);
 }
