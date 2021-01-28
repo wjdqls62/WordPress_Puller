@@ -75,7 +75,7 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
             postManager = new PostManager();
             postManager.start();
         }else{
-            DownloadManager downloadManager = new DownloadManager(postList, selector.getSelectedFile().getPath(), includeCategories);
+            DownloadManager downloadManager = new DownloadManager(postList, path, includeCategories);
             progressBar1.setMaximum(postList.size());
             progressBar1.setMinimum(0);
             downloadManager.start();
