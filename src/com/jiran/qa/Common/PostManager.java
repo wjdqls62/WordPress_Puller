@@ -14,9 +14,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class PostManager extends Thread {
-    private JSONArray mediaJsonArray;
-    private JSONArray postJsonArray;
-    private JSONArray categoriesArray;
+    private ArrayList<JSONArray> mediaJsonArray;
+    private ArrayList<JSONArray> postJsonArray;
+    private ArrayList<JSONArray> categoriesArray;
+    private ArrayList<JSONArray> tempList;
+
     private ArrayList<PostVO> postList;
     private HashMap<String, CategoriesVO> categoriesVOHashMap;
     private boolean isEmpty = false;
@@ -56,7 +58,7 @@ public class PostManager extends Thread {
         return isEmpty;
     }
 
-    public JSONArray getCategoriesArray(){
+    public ArrayList<JSONArray> getCategoriesArray(){
         return categoriesArray;
     }
 
@@ -64,57 +66,74 @@ public class PostManager extends Thread {
         return postList;
     }
 
-    public JSONArray get(String requestURL){
+    public ArrayList<JSONArray> get(String requestURL){
+        boolean is_400_Error = false;
+        tempList = new ArrayList<>();
+        int pageCnt = 1;
         HttpURLConnection conn = null;
         JSONArray respJsonArray = null;
         int responseCode = 0;
 
-        try{
-            URL url = new URL(requestURL);
+        while(!is_400_Error){
+            try{
+                URL url = new URL(requestURL + pageCnt);
+                logger.log("RequestURL : " + requestURL + pageCnt);
 
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setConnectTimeout(10000);
-            conn.setReadTimeout(10000);
-            conn.setRequestMethod("GET");
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+                conn.setRequestMethod("GET");
 
-            JSONObject commands = new JSONObject();
 
-            responseCode = conn.getResponseCode();
-            if(responseCode == 400 || responseCode == 401 || responseCode == 500){
-                logger.log("Error Code : " + responseCode);
-            }else{
-                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder stringBuilder = new StringBuilder();
-                String line = "";
+                responseCode = conn.getResponseCode();
+                if(responseCode == 400 || responseCode == 401 || responseCode == 500){
+                    logger.log("Error Code : " + responseCode);
+                    is_400_Error = true;
+                }else{
+                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuilder stringBuilder = new StringBuilder();
+                    String line = "";
 
-                while ((line = br.readLine()) != null){
-                    stringBuilder.append(line);
+                    while ((line = br.readLine()) != null){
+                        stringBuilder.append(line);
+                    }
+                    respJsonArray = new JSONArray(stringBuilder.toString());
+
+                    if(respJsonArray.isEmpty()){
+                        if(Config.isDebug){
+                            logger.log("respJsonArray is null...");
+                        }
+                        break;
+                    }
+                    tempList.add(respJsonArray);
+                    pageCnt += 1;
                 }
-                respJsonArray = new JSONArray(stringBuilder.toString());
-            }
 
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-            postManagerCallback.finishParse();
-        } catch (SocketTimeoutException e){
-            e.printStackTrace();
-            postManagerCallback.finishParse();
-            logger.log("Fail. Connection Timeout.");
-        } catch (IOException e) {
-            postManagerCallback.finishParse();
-            e.printStackTrace();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                postManagerCallback.finishParse();
+            } catch (SocketTimeoutException e){
+                e.printStackTrace();
+                postManagerCallback.finishParse();
+                logger.log("Fail. Connection Timeout.");
+            } catch (IOException e) {
+                postManagerCallback.finishParse();
+                e.printStackTrace();
+            }
         }
-        return respJsonArray;
+        return tempList;
     }
 
     private void setCategoriesArray(){
 
-        for(int i = 0; i < categoriesArray.length(); i++){
-            JSONObject temp = categoriesArray.getJSONObject(i);
-            CategoriesVO categoriesVO = new CategoriesVO();
+        for(int i = 0; i < categoriesArray.size(); i++){
+            for(int j=0; j< categoriesArray.get(i).length(); j++){
+                JSONObject temp = categoriesArray.get(i).getJSONObject(j);
+                CategoriesVO categoriesVO = new CategoriesVO();
 
-            categoriesVO.setCategories(temp);
-            categoriesVOHashMap.put(temp.get("id").toString(), categoriesVO);
+                categoriesVO.setCategories(temp);
+                categoriesVOHashMap.put(temp.get("id").toString(), categoriesVO);
+            }
         }
     }
 
@@ -122,31 +141,35 @@ public class PostManager extends Thread {
 
         ArrayList<PostVO> tempPost = new ArrayList<>();
 
-        for(int i = 0; i < mediaJsonArray.length(); i++){
-            PostVO postVO = new PostVO();
-            String media_id, post_id, str_temp;
+        for(int i=0; i< mediaJsonArray.size(); i++){
+            for(int j = 0; j < mediaJsonArray.get(i).length(); j++){
+                PostVO postVO = new PostVO();
+                String media_id, post_id, str_temp;
 
-            // set attachment url
-            str_temp = mediaJsonArray.getJSONObject(i).get("source_url").toString();
-            postVO.setATTACHMENT_SOURCE_URL(str_temp);
+                // set attachment url
+                str_temp = mediaJsonArray.get(i).getJSONObject(j).get("source_url").toString();
+                postVO.setATTACHMENT_SOURCE_URL(str_temp);
 
-            // set media id
-            media_id = mediaJsonArray.getJSONObject(i).get("id").toString();
-            postVO.setMEDIA_ID(media_id);
+                // set media id
+                media_id = mediaJsonArray.get(i).getJSONObject(j).get("id").toString();
+                postVO.setMEDIA_ID(media_id);
 
-            // set post id
-            post_id = mediaJsonArray.getJSONObject(i).get("post").toString();
-            postVO.setPOST_ID(post_id);
-            for(int j=0; j<postJsonArray.length(); j++){
-                if(postJsonArray.getJSONObject(j).get("id").toString().equals(post_id)){
-                    String temp = postJsonArray.getJSONObject(j).get("categories").toString().replaceAll("[^0-9]", "");
-                    postVO.setCATEGORIES_ID(temp);
-                    postVO.setPOST_URL(postJsonArray.getJSONObject(j).get("link").toString());
-                    postVO.setCATEGORIES_NAME(categoriesVOHashMap.get(temp).getCategories_name());
+                // set post id
+                post_id = mediaJsonArray.get(i).getJSONObject(j).get("post").toString();
+                postVO.setPOST_ID(post_id);
+                for(int k=0; k<postJsonArray.size(); k++){
+                    for(int l=0; l<postJsonArray.get(k).length(); l++){
+                        if(postJsonArray.get(k).getJSONObject(l).get("id").toString().equals(post_id)){
+                            String temp = postJsonArray.get(k).getJSONObject(l).get("categories").toString().replaceAll("[^0-9]", "");
+                            postVO.setCATEGORIES_ID(temp);
+                            postVO.setPOST_URL(postJsonArray.get(k).getJSONObject(l).get("link").toString());
+                            postVO.setCATEGORIES_NAME(categoriesVOHashMap.get(temp).getCategories_name());
+                        }
+                    }
                 }
-            }
-            postVO.log();
-            tempPost.add(postVO);
+                postVO.log();
+                tempPost.add(postVO);
+        }
         }
         return tempPost;
     }

@@ -1,59 +1,115 @@
 package com.jiran.qa.Common;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import com.jiran.qa.View.MainView;
+import com.sun.tools.javac.Main;
+
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.Format;
+import java.util.ArrayList;
+import java.util.HashSet;
 
-public class DownloadManager implements Runnable{
-    String httpUrl = null;
+public class DownloadManager extends Thread {
+    private ILogCallback logger = MainView.getLogger();
+    private IDownloadManager downloadManagerCallback = MainView.getDownloadManagerCallback();
+    private ArrayList<PostVO> postList;
+    private HashSet<String> includeCategories;
+    private long totalSize = 0;
+    private String path;
 
-    public DownloadManager(String httpUrl){
-        this.httpUrl = httpUrl;
+    public DownloadManager(ArrayList<PostVO> postLost, String path, HashSet<String> includeCategories){
+        logger.log("DownloadManager init.");
+        this.postList = postLost;
+        this.path = path;
+        this.includeCategories = includeCategories;
     }
 
+    public void setIncludeCategories(HashSet<String> includeCategories){
+        this.includeCategories = includeCategories;
+    }
+
+    /**
+     * 다운로드 전 include에 포함된 카테고리인지 확인 후 FLAG변수를 정의한다.
+     */
+    public void After(){
+        double totalFileSize = 0;
+
+        for(int i=0; i < postList.size(); i++){
+            if(includeCategories.contains(postList.get(i).getCATEGORIES_NAME())){
+                try {
+                    postList.get(i).setInclude(true);
+                    URL url = new URL(postList.get(i).getAttachment_Source_URL());
+                    URLConnection urlConnection = url.openConnection();
+                    totalFileSize += urlConnection.getContentLength();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }else{
+                postList.get(i).setInclude(false);
+            }
+        }
+        logger.log("Total Size : " + totalFileSize);
+    }
+
+    /**
+     * Local 경로에 다운로드 한다.
+     */
     @Override
     public void run() {
-        String path = System.getProperty("user.dir");
-        System.out.println("path : " + path);
+        logger.log("DownloadManager thread is start.");
 
-        String targetFilename = getFileName(httpUrl);
-        FileOutputStream fos = null;
-        InputStream is = null;
-        try {
-            fos = new FileOutputStream(path+"/" + targetFilename);
+        After();
 
-            URL url = new URL(httpUrl);
-            URLConnection urlConnection = url.openConnection();
-            is = urlConnection.getInputStream();
-            byte[] buffer = new byte[1024];
-            double fileSize = urlConnection.getContentLength();
-            double size = 0;
-            int readBytes = 0;
-            while ((readBytes = is.read(buffer)) != -1) {
-                size += readBytes;
-                System.out.format("Progress : %.1f%%%n", size / fileSize * 100.0);
-                fos.write(buffer, 0, readBytes);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (fos != null) {
-                    fos.close();
+        for(int i = 0; i < postList.size(); i++){
+            if(postList.get(i).isInclude()){
+                String dirName = postList.get(i).getCATEGORIES_NAME();
+                File file = new File(path + "\\" + dirName);
+                if(!file.exists()){
+                    file.mkdir();
                 }
-                if (is != null) {
-                    is.close();
+
+                String targetFilename = getFileName(postList.get(i).getAttachment_Source_URL());
+
+                FileOutputStream fos = null;
+                InputStream is = null;
+                try {
+                    fos = new FileOutputStream(path+"/" + dirName + "/" + targetFilename);
+
+                    URL url = new URL(postList.get(i).getAttachment_Source_URL());
+                    URLConnection urlConnection = url.openConnection();
+                    downloadManagerCallback.startDownload(targetFilename, urlConnection.getContentLengthLong());
+
+                    is = urlConnection.getInputStream();
+                    byte[] buffer = new byte[1024];
+                    double fileSize = urlConnection.getContentLength();
+                    int readBytes = 0;
+                    while ((readBytes = is.read(buffer)) != -1) {
+                        //System.out.format("Progress : %.1f%%%n", size / fileSize * 100.0);
+                        fos.write(buffer, 0, readBytes);
+                    }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        if (fos != null) {
+                            fos.close();
+                        }
+                        if (is != null) {
+                            is.close();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+                downloadManagerCallback.finishDownload(targetFilename);
             }
         }
     }

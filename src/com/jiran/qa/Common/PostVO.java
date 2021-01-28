@@ -7,6 +7,8 @@ public class PostVO {
     private String CATEGORIES_NAME;
     private String POST_URL;
     private String ATTACHMENT_SOURCE_URL;
+    private String ATTACHMENT_SIZE;
+    private boolean isInclude;
 
     public void setMEDIA_ID(String id){
         this.MEDIA_ID = id;
@@ -32,8 +34,24 @@ public class PostVO {
         this.ATTACHMENT_SOURCE_URL = url;
     }
 
+    public void setATTACHMENT_SIZE(String size){
+        this.ATTACHMENT_SIZE = size;
+    }
+
+    public void setInclude(boolean isInclude){
+        this.isInclude = isInclude;
+    }
+
+    public String getAttachment_Source_URL(){
+        return ATTACHMENT_SOURCE_URL;
+    }
+
     public String getCATEGORIES_NAME(){
         return CATEGORIES_NAME;
+    }
+
+    public boolean isInclude(){
+        return isInclude;
     }
 
     public void log(){

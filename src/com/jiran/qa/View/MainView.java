@@ -1,20 +1,15 @@
 package com.jiran.qa.View;
 
 import com.jiran.qa.Common.*;
-import com.sun.tools.javac.Main;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Vector;
 
-public class MainView extends JDialog implements ILogCallback, IPostManagerCallback {
+public class MainView extends JDialog implements ILogCallback, IPostManagerCallback, IDownloadManager {
     private JPanel contentPane;
     private JButton btnStart;
     private JProgressBar progressBar1;
@@ -27,19 +22,27 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
     private JScrollPane exclude_list;
     private JList list1;
     private JList list2;
+    private JCheckBox chkDebug;
+    private JButton btnClear;
     private String path;
-
+    private JFileChooser selector;
     private ArrayList<PostVO> postList;
     private PostManager postManager;
+    private DownloadManager downloadManager;
     private boolean isReady;
     private boolean isRunning;
 
-    private Vector<String> includeCategories;
-    private Vector<String> excludeCategories;
+    private HashSet<String> includeCategories;
+    private HashSet<String> excludeCategories;
     private static ILogCallback logCallback;
     private static IPostManagerCallback postManagerCallback;
+    private static IDownloadManager downloadManagerCallback;
 
     SimpleDateFormat simpleDateFormat;
+
+    public static IDownloadManager getDownloadManagerCallback(){
+        return downloadManagerCallback;
+    }
 
     public static ILogCallback getLogger(){
         return logCallback;
@@ -64,18 +67,38 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
         }
     }
 
-    // Search, Pull 버튼 동작
+    /**
+     * isReady == false의 경우 Post 를 긁어온다 (Search 버튼일 경우)
+     * isReady == true의 경우 메모리에 올라가있는 Post배열을 다운로드 한다.
+     * @throws InterruptedException
+     */
     private void onOK() throws InterruptedException {
-        postManager = new PostManager();
-        postManager.start();
+        if(!isReady){
+            postManager = new PostManager();
+            postManager.start();
+        }else{
+            if(downloadManager == null){
+                downloadManager = new DownloadManager(postList, selector.getSelectedFile().getPath(), includeCategories);
+
+            }else{
+                downloadManager.setIncludeCategories(includeCategories);
+            }
+            progressBar1.setMaximum(postList.size());
+            progressBar1.setMinimum(0);
+            downloadManager.start();
+        }
+
     }
 
     private void init(){
         logCallback = this;
         postManagerCallback = this;
+        downloadManagerCallback = this;
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(btnStart);
+
+
 
         // Positive 버튼 초기화
         btnStart.addActionListener(new ActionListener() {
@@ -110,17 +133,69 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
         btnSelector.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFileChooser selector = new JFileChooser();
+                if(selector == null){
+                    selector = new JFileChooser();
+                }
+
                 selector.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 selector.showOpenDialog(null);
 
-                savePath.setText(selector.getSelectedFile().toString());
-                log("Selector Path : " + selector.getSelectedFile());
+                if(selector.getSelectedFile() != null){
+                    savePath.setText(selector.getSelectedFile().toString());
+                    log("Selector Path : " + selector.getSelectedFile());
+                }
+            }
+        });
+
+        chkDebug.setSelected(Config.isDebug);
+        chkDebug.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(chkDebug.isSelected()){
+                    Config.isDebug = true;
+                }else{
+                    Config.isDebug = false;
+                }
+                log("isDebug : " + Config.isDebug);
+            }
+        });
+
+        btnClear.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                logTxt.setText(null);
+            }
+        });
+
+        /**
+         * JList 의 Item을 2번이상 연속클릭시 include <-> exclude 로 Item을 이동시킨다.
+         */
+        list1.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(e.getClickCount() >= 2){
+                    int index = list1.locationToIndex(e.getPoint());
+                    excludeCategories.add(list1.getModel().getElementAt(index).toString());
+                    includeCategories.remove(list1.getModel().getElementAt(index));
+                    list1.setListData(includeCategories.toArray());
+                    list2.setListData(excludeCategories.toArray());
+                }
+            }
+        });
+        list2.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(e.getClickCount() >= 2){
+                    int index = list2.locationToIndex(e.getPoint());
+                    includeCategories.add(list2.getModel().getElementAt(index).toString());
+                    excludeCategories.remove(list2.getModel().getElementAt(index));
+                    list1.setListData(includeCategories.toArray());
+                    list2.setListData(excludeCategories.toArray());
+                }
             }
         });
 
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
 
     }
 
@@ -143,21 +218,24 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
     public void finishParse() {
         log("finishParse()");
         postList = postManager.getPosts();
-        HashSet<String> categories;
+
+
+        /**
+         *  최초 Categories 수신시 중복값 제거를 위해 HashSet 처리 후 toArray() 처리
+         */
 
         if(postManager.getPosts() != null){
-            categories = new HashSet<>();
+            includeCategories = new HashSet<>();
+            excludeCategories = new HashSet<>();
 
             for(int i = 0; i<postList.size(); i++){
                 String  temp = postList.get(i).getCATEGORIES_NAME();
-                categories.add(temp);
+                includeCategories.add(temp);
             }
 
-            includeCategories = new Vector<>();
-            excludeCategories = new Vector<>();
 
-            list1.setListData(categories.toArray());
-            list2.setListData(excludeCategories);
+            list1.setListData(includeCategories.toArray());
+            //list2.setListData(excludeCategories);
             list1.updateUI();
             isReady = true;
         }else{
@@ -177,5 +255,21 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
         view.setResizable(false);
         view.setTitle("TEST");
         System.exit(0);
+    }
+
+    @Override
+    public void startDownload(String fileName, long fileSize) {
+        log("Download of [" + fileName + "] started. / " + fileSize / 1024 + " KBytes");
+    }
+
+    @Override
+    public void finishDownload(String fileName) {
+        log("Download of " + fileName + " completed.");
+        updateProgressBar(progressBar1.getValue()+1);
+    }
+
+    @Override
+    public void updateProgressBar(int percent) {
+        progressBar1.setValue(percent);
     }
 }
