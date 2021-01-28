@@ -37,6 +37,8 @@ public class DownloadManager extends Thread {
      */
     public void After(){
         double totalFileSize = 0;
+        // rest progressbar
+        downloadManagerCallback.resetProgressBar();
 
         for(int i=0; i < postList.size(); i++){
             if(includeCategories.contains(postList.get(i).getCATEGORIES_NAME())){
