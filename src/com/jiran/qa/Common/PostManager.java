@@ -35,8 +35,14 @@ public class PostManager extends Thread {
         logger.log("PostManager started searching the attachments.");
 
         mediaJsonArray =  get(Config.REQUEST_MEDIA_URL);
-        postJsonArray = get(Config.REQUEST_POST_URL);
-        categoriesArray = get(Config.REQUEST_CATEGORIES_URL);
+
+        /**
+         * MediaJson을 받아오지 못했을경우 post 및 categories에 대한 request를 하지 않도록 조건문으로 분기
+         */
+        if(!mediaJsonArray.isEmpty()){
+            postJsonArray = get(Config.REQUEST_POST_URL);
+            categoriesArray = get(Config.REQUEST_CATEGORIES_URL);
+        }
 
         categoriesVOHashMap = new HashMap<>();
         setCategoriesArray();
@@ -123,16 +129,19 @@ public class PostManager extends Thread {
                 e.printStackTrace();
                 logger.log(e.toString());
                 postManagerCallback.finishParse();
+                break;
             } catch (SocketTimeoutException e){
                 e.printStackTrace();
                 logger.log(e.toString());
                 postManagerCallback.finishParse();
                 logger.log(e.toString());
                 logger.log("Fail. Connection Timeout.");
+                break;
             } catch (IOException e) {
                 postManagerCallback.finishParse();
                 logger.log(e.toString());
                 e.printStackTrace();
+                break;
             }
         }
         return tempList;
