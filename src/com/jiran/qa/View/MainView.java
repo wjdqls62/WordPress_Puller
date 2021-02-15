@@ -270,7 +270,18 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
 
     @Override
     public void startDownload(String fileName, long fileSize) {
-        log("Download of [" + fileName + "] started. / " + fileSize / 1024 + "KBytes");
+        // Byte
+        if(fileSize <= 1024){
+            log("Download of [" + fileName + "] started. / " + fileSize + "B");
+        }
+        // KByte
+        else if(fileSize > 1024 && fileSize <= 1048576){
+            log("Download of [" + fileName + "] started. / " + fileSize / 1024 + "KB");
+        }
+        // Mbyte
+        else if(fileSize > 1048576){
+            log("Download of [" + fileName + "] started. / " + fileSize / 1024 / 1024 + "MB");
+        }
     }
 
     @Override
