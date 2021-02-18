@@ -1,11 +1,11 @@
 package com.jiran.qa.Common;
 
 import com.jiran.qa.View.MainView;
-
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -72,6 +72,9 @@ public class DownloadManager extends Thread {
         for(int i = 0; i < postList.size(); i++){
             if(postList.get(i).isInclude()){
                 String dirName = postList.get(i).getCATEGORIES_NAME();
+                if(dirName == null){
+                    dirName = "None_Categories";
+                }
                 File file = new File(path + "\\" + dirName);
                 if(!file.exists()){
                     file.mkdir();
@@ -84,16 +87,17 @@ public class DownloadManager extends Thread {
                 try {
                     fos = new FileOutputStream(path+"/" + dirName + "/" + targetFilename);
 
-                    URL url = new URL(postList.get(i).getAttachment_Source_URL());
+                    URL url = new URL(getEncodeURL(postList.get(i).getAttachment_Source_URL()));
                     URLConnection urlConnection = url.openConnection();
                     downloadManagerCallback.startDownload(targetFilename, urlConnection.getContentLengthLong());
 
-                    is = urlConnection.getInputStream();
-                    byte[] buffer = new byte[1024];
+                    //is = urlConnection.getInputStream();
+                    is = new BufferedInputStream(urlConnection.getInputStream());
+                    byte[] buffer = new byte[2048];
                     double fileSize = urlConnection.getContentLength();
-                    int readBytes = 0;
+                    int readBytes = 2048;
                     while ((readBytes = is.read(buffer)) != -1) {
-                        //System.out.format("Progress : %.1f%%%n", size / fileSize * 100.0);
+                        //System.out.forma/t("Progress : %.1f%%%n", size / fileSize * 100.0);
                         fos.write(buffer, 0, readBytes);
                     }
                 } catch (FileNotFoundException e) {
@@ -135,5 +139,24 @@ public class DownloadManager extends Thread {
         }else{
             return null;
         }
+    }
+
+    /**
+     * 한글파일 다운로드시 InputStream 에 문제가 발생하여,
+     * 파일명을 UTF-8로 Encode 하여 Return 해주도록 한다.
+     * @param httpURL
+     * @return
+     */
+    public String getEncodeURL(String httpURL){
+        String result = httpURL.substring(httpURL.lastIndexOf('/')+1);
+        String encodeResult = "";
+
+        try {
+            encodeResult = URLEncoder.encode(result, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        return httpURL.replace(result, encodeResult);
     }
 }
