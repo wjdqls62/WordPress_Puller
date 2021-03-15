@@ -76,8 +76,8 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
             postManager.start();
         }else{
             DownloadManager downloadManager = new DownloadManager(postList, path, includeCategories);
-            progressBar1.setMaximum(postList.size());
-            progressBar1.setMinimum(0);
+            // progressBar1.setMaximum(postList.size());
+            // progressBar1.setMinimum(0);
             downloadManager.start();
         }
 
@@ -298,6 +298,16 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
     @Override
     public void updateProgressBar(int percent) {
         progressBar1.setValue(percent);
+    }
+
+    @Override
+    public void setMaximumProgressBar(int cntFile) {
+        progressBar1.setMaximum(cntFile);
+    }
+
+    @Override
+    public void setMinimumProgressBar(int value) {
+        progressBar1.setMinimum(value);
     }
 
     @Override

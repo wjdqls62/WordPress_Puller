@@ -35,6 +35,7 @@ public class DownloadManager extends Thread {
      */
     public void before(){
         double totalFileSize = 0;
+        int cntInclude = 0;
         // rest progressbar
         downloadManagerCallback.resetProgressBar();
         downloadManagerCallback.setButton(false);
@@ -43,6 +44,7 @@ public class DownloadManager extends Thread {
             if(includeCategories.contains(postList.get(i).getCATEGORIES_NAME())){
                 try {
                     postList.get(i).setInclude(true);
+                    cntInclude += 1;
                     URL url = new URL(postList.get(i).getAttachment_Source_URL());
                     URLConnection urlConnection = url.openConnection();
                     totalFileSize += urlConnection.getContentLength();
@@ -57,6 +59,8 @@ public class DownloadManager extends Thread {
                 postList.get(i).setInclude(false);
             }
         }
+        downloadManagerCallback.setMinimumProgressBar(0);
+        downloadManagerCallback.setMaximumProgressBar(cntInclude);
         logger.log("Total Size : " + totalFileSize / 1024 + " KBytes");
     }
 
