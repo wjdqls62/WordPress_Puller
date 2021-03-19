@@ -187,6 +187,11 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
         });
 
         /**
+         * 로그표시창 편집불가하도록 설정
+         */
+        logTxt.setEditable(false);
+
+        /**
          * Clear버튼 정의구문
          */
         btnClear.addActionListener(new ActionListener() {
