@@ -4,6 +4,8 @@ import com.jiran.qa.Common.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,20 +26,20 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
     private JList list2;
     private JCheckBox chkDebug;
     private JButton btnClear;
+    private JButton btnOpenDir;
     private String path;
     private JFileChooser selector;
     private ArrayList<PostVO> postList;
     private PostManager postManager;
     private boolean isReady;
     private boolean isRunning;
-
     private HashSet<String> includeCategories;
     private HashSet<String> excludeCategories;
     private static ILogCallback logCallback;
     private static IPostManagerCallback postManagerCallback;
     private static IDownloadManager downloadManagerCallback;
-
-    SimpleDateFormat simpleDateFormat;
+    private SimpleDateFormat simpleDateFormat;
+    Desktop desktop;
 
     public static IDownloadManager getDownloadManagerCallback(){
         return downloadManagerCallback;
@@ -148,6 +150,25 @@ public class MainView extends JDialog implements ILogCallback, IPostManagerCallb
                 }
             }
         });
+
+        /**
+         * 현재폴더 열기 정의구문
+         */
+        btnOpenDir.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(desktop == null){
+                    desktop = Desktop.getDesktop();
+                }
+                try {
+                    desktop.open(new File(savePath.getText()));
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                    log("Fail to open directory.");
+                }
+            }
+        });
+
 
         /**
          * isDebug 체크박스 정의구문
