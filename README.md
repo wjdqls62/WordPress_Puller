@@ -15,7 +15,7 @@ Browse 버튼을 선택해서 다운로드 될 디렉토리를 선택한다.
 기능 설명 
 ![puller_main_view](https://user-images.githubusercontent.com/8287502/151955995-24b22cf5-49c2-4cb9-a29d-2d424601f1f8.png)
 
-Path : EXE의 실행경로를 최초로 자동완성 된다.
+Path : EXE의 실행경로를 최초로 자동완성 된다.\n
 Browse : 다운로드 될 경로를 직접 선택하도록 경로선택기를 표시한다.
 Search & Pull : 워드프레스의 첨부파일(Post) 정보를 가져온다.
                         첨부파일을 로컬디스크로 다운로드 한다.
